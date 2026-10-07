@@ -1,0 +1,1361 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
+<title>2-Minute Attention Task</title>
+
+<style>
+
+html, body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    font-family: Arial, sans-serif;
+
+    touch-action: manipulation;
+    user-select: none;
+    overscroll-behavior: none;
+}
+
+body {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+}
+
+#container {
+    width: 90%;
+    max-width: 600px;
+}
+
+#stimulus {
+
+    width: min(200px, 45vw);
+    height: min(200px, 45vw);
+
+    background: red;
+
+    margin: 60px auto;
+
+    display: none;
+}
+
+button {
+
+    font-size: 20px;
+
+    padding: 14px 30px;
+
+    cursor: pointer;
+}
+
+#message {
+
+    font-size: 22px;
+
+    min-height: 45px;
+}
+
+#countdown {
+
+    font-size: 60px;
+
+    font-weight: bold;
+}
+
+.small {
+
+    font-size: 14px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div id="container">
+
+<h1>Attention Task</h1>
+
+<p id="studyID"></p>
+
+
+<div id="instructions">
+
+    <p>
+        This task measures your reaction speed and attention.
+    </p>
+
+    <p>
+        A red square will appear after a random waiting period.
+    </p>
+
+    <p>
+        <b>Phone / tablet:</b>
+        tap anywhere on the screen as quickly as possible.
+    </p>
+
+    <p>
+        <b>Computer:</b>
+        press the SPACE BAR or click anywhere on the screen.
+    </p>
+
+    <p>
+        Do not respond before the red square appears.
+    </p>
+
+    <p>
+        You will first complete one practice example.
+        The practice response will not be recorded.
+    </p>
+
+    <button id="demoButton">
+        Try Example
+    </button>
+
+</div>
+
+
+<div id="stimulus"></div>
+
+<div id="countdown"></div>
+
+<p id="message"></p>
+
+</div>
+
+
+<script>
+
+/* ====================================
+   SETTINGS
+==================================== */
+const DATA_API_URL =
+    "https://epyqacdwlatusratuiyi.supabase.co/rest/v1/";
+
+const SUPABASE_KEY =
+    "sb_publishable_Is5CLpVSzjWsNiAMy6RfAA_zROarpI2";
+
+const WJX_URL =
+    "https://v.wjx.cn/vm/YvHfeon.aspx#";
+
+const TEST_DURATION =
+    2 *60 * 1000;
+
+const MIN_DELAY =
+    2000;
+
+const MAX_DELAY =
+    10000;
+
+const DEMO_MIN_DELAY =
+    1500;
+
+const DEMO_MAX_DELAY =
+    3000;
+
+
+/* ====================================
+   STUDY ID
+==================================== */
+
+const studyID =
+    "SJ-" +
+    Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
+
+document
+    .getElementById("studyID")
+    .innerText =
+    "Study ID: " + studyID;
+
+
+/* ====================================
+   VARIABLES
+==================================== */
+
+let phase =
+    "instructions";
+
+/*
+phases:
+instructions
+demo_waiting
+demo_stimulus
+countdown
+formal
+finished
+*/
+
+let results = [];
+
+let stimulusVisible =
+    false;
+
+let stimulusStart =
+    null;
+
+let testStart =
+    null;
+
+let waitingTimer =
+    null;
+
+let trialNumber =
+    0;
+
+
+/* ====================================
+   DEMO
+==================================== */
+
+document
+    .getElementById("demoButton")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            event.stopPropagation();
+
+            startDemo();
+
+        }
+    );
+
+
+function startDemo() {
+
+    document
+        .getElementById("instructions")
+        .style.display =
+        "none";
+
+
+    document
+        .getElementById("studyID")
+        .style.display =
+        "none";
+
+
+    document
+        .getElementById("message")
+        .innerText =
+        "Wait for the red square...";
+
+
+    phase =
+        "demo_waiting";
+
+
+    const delay =
+        DEMO_MIN_DELAY +
+        Math.random() *
+        (
+            DEMO_MAX_DELAY -
+            DEMO_MIN_DELAY
+        );
+
+
+    waitingTimer =
+        setTimeout(
+            showDemoStimulus,
+            delay
+        );
+
+}
+
+
+function showDemoStimulus() {
+
+    phase =
+        "demo_stimulus";
+
+
+    stimulusVisible =
+        true;
+
+
+    stimulusStart =
+        performance.now();
+
+
+    document
+        .getElementById("message")
+        .innerText =
+        "";
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "block";
+
+}
+
+
+/* ====================================
+   DEMO RESPONSE
+==================================== */
+
+function respondToDemo() {
+
+    if (
+        phase ===
+        "demo_waiting"
+    ) {
+
+        clearTimeout(
+            waitingTimer
+        );
+
+
+        document
+            .getElementById("message")
+            .innerText =
+            "Too early. Wait for the red square.";
+
+
+        setTimeout(
+            startDemo,
+            1000
+        );
+
+
+        return;
+    }
+
+
+    if (
+        phase !==
+        "demo_stimulus"
+    ) {
+
+        return;
+
+    }
+
+
+    stimulusVisible =
+        false;
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "none";
+
+
+    document
+        .getElementById("message")
+        .innerText =
+        "Good. The real test will now begin.";
+
+
+    setTimeout(
+        startCountdown,
+        1200
+    );
+
+}
+
+
+/* ====================================
+   COUNTDOWN
+==================================== */
+
+function startCountdown() {
+
+    phase =
+        "countdown";
+
+
+    document
+        .getElementById("message")
+        .innerText =
+        "";
+
+
+    let number =
+        3;
+
+
+    document
+        .getElementById("countdown")
+        .innerText =
+        number;
+
+
+    const countdownTimer =
+        setInterval(
+            function() {
+
+                number--;
+
+
+                if (
+                    number > 0
+                ) {
+
+                    document
+                        .getElementById("countdown")
+                        .innerText =
+                        number;
+
+                }
+
+                else {
+
+                    clearInterval(
+                        countdownTimer
+                    );
+
+
+                    document
+                        .getElementById("countdown")
+                        .innerText =
+                        "";
+
+
+                    startFormalTest();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* ====================================
+   FORMAL TEST
+==================================== */
+
+function startFormalTest() {
+
+    phase =
+        "formal";
+
+
+    results = [];
+
+
+    trialNumber =
+        0;
+
+
+    testStart =
+        performance.now();
+
+
+    nextTrial();
+
+}
+
+
+/* ====================================
+   NEXT TRIAL
+==================================== */
+
+function nextTrial() {
+
+    if (
+        phase !==
+        "formal"
+    ) {
+
+        return;
+
+    }
+
+
+    const elapsed =
+        performance.now()
+        - testStart;
+
+
+    if (
+        elapsed >=
+        TEST_DURATION
+    ) {
+
+        finishTest();
+
+        return;
+
+    }
+
+
+    stimulusVisible =
+        false;
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "none";
+
+
+    const delay =
+        MIN_DELAY +
+        Math.random() *
+        (
+            MAX_DELAY -
+            MIN_DELAY
+        );
+
+
+    waitingTimer =
+        setTimeout(
+            showFormalStimulus,
+            delay
+        );
+
+}
+
+
+/* ====================================
+   SHOW FORMAL STIMULUS
+==================================== */
+
+function showFormalStimulus() {
+
+    if (
+        phase !==
+        "formal"
+    ) {
+
+        return;
+
+    }
+
+
+    const elapsed =
+        performance.now()
+        - testStart;
+
+
+    if (
+        elapsed >=
+        TEST_DURATION
+    ) {
+
+        finishTest();
+
+        return;
+
+    }
+
+
+    stimulusVisible =
+        true;
+
+
+    stimulusStart =
+        performance.now();
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "block";
+
+}
+
+
+/* ====================================
+   FORMAL RESPONSE
+==================================== */
+
+function respondFormal(
+    inputType
+) {
+
+    if (
+        phase !==
+        "formal"
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+       RESPONSE BEFORE STIMULUS
+       = FALSE START
+    */
+
+    if (
+        !stimulusVisible
+    ) {
+
+        clearTimeout(
+            waitingTimer
+        );
+
+
+        trialNumber++;
+
+
+        results.push({
+
+            trial:
+                trialNumber,
+
+            rt:
+                null,
+
+            falseStart:
+                true,
+
+            lapse:
+                false,
+
+            input:
+                inputType,
+
+            timestamp:
+                performance.now()
+                - testStart
+
+        });
+
+
+        /*
+        No feedback during
+        formal test.
+        */
+
+
+        setTimeout(
+            nextTrial,
+            300
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+       RESPONSE AFTER STIMULUS
+    */
+
+    const rt =
+        performance.now()
+        - stimulusStart;
+
+
+    stimulusVisible =
+        false;
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "none";
+
+
+    const falseStart =
+        rt < 100;
+
+
+    const lapse =
+        rt >= 500;
+
+
+    trialNumber++;
+
+
+    results.push({
+
+        trial:
+            trialNumber,
+
+        rt:
+            Math.round(rt),
+
+        falseStart:
+            falseStart,
+
+        lapse:
+            lapse,
+
+        input:
+            inputType,
+
+        timestamp:
+            performance.now()
+            - testStart
+
+    });
+
+
+    /*
+       No RT feedback.
+    */
+
+    setTimeout(
+        nextTrial,
+        300
+    );
+
+}
+
+
+/* ====================================
+   UNIVERSAL RESPONSE HANDLER
+==================================== */
+
+function registerResponse(
+    inputType
+) {
+
+    if (
+        phase ===
+        "demo_waiting" ||
+        phase ===
+        "demo_stimulus"
+    ) {
+
+        respondToDemo();
+
+        return;
+
+    }
+
+
+    if (
+        phase ===
+        "formal"
+    ) {
+
+        respondFormal(
+            inputType
+        );
+
+    }
+
+}
+
+
+/* ====================================
+   TOUCH + MOUSE
+==================================== */
+
+document
+    .addEventListener(
+        "pointerdown",
+        function(event) {
+
+            /*
+            Ignore buttons.
+            */
+
+            if (
+                event.target.tagName ===
+                "BUTTON"
+            ) {
+
+                return;
+
+            }
+
+
+            registerResponse(
+
+                event.pointerType ||
+                "pointer"
+
+            );
+
+        }
+    );
+
+
+/* ====================================
+   KEYBOARD
+==================================== */
+
+document
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.code !==
+                "Space"
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                event.repeat
+            ) {
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            registerResponse(
+                "keyboard"
+            );
+
+        }
+    );
+
+
+/* ====================================
+   CALCULATIONS
+==================================== */
+
+function calculateMedian(
+    values
+) {
+
+    if (
+        values.length === 0
+    ) {
+
+        return null;
+
+    }
+
+
+    const sorted =
+        [...values]
+        .sort(
+            (a, b) =>
+            a - b
+        );
+
+
+    const middle =
+        Math.floor(
+            sorted.length / 2
+        );
+
+
+    if (
+        sorted.length % 2 === 0
+    ) {
+
+        return (
+
+            sorted[
+                middle - 1
+            ]
+            +
+
+            sorted[
+                middle
+            ]
+
+        ) / 2;
+
+    }
+
+
+    return sorted[
+        middle
+    ];
+
+}
+
+
+function calculateMean(
+    values
+) {
+
+    if (
+        values.length === 0
+    ) {
+
+        return null;
+
+    }
+
+
+    return (
+
+        values.reduce(
+            (a, b) =>
+            a + b,
+            0
+        )
+
+        /
+
+        values.length
+
+    );
+
+}
+
+
+function calculateSD(
+    values
+) {
+
+    if (
+        values.length < 2
+    ) {
+
+        return null;
+
+    }
+
+
+    const mean =
+        calculateMean(
+            values
+        );
+
+
+    const variance =
+
+        values.reduce(
+
+            (sum, value) =>
+
+                sum +
+                Math.pow(
+                    value - mean,
+                    2
+                ),
+
+            0
+
+        )
+
+        /
+
+        (
+            values.length - 1
+        );
+
+
+    return Math.sqrt(
+        variance
+    );
+
+}
+
+
+/* ====================================
+   FINISH
+==================================== */
+async function uploadPVTData(pvtData) {
+
+    const requestURL =
+        DATA_API_URL.replace(/\/$/, "")
+        + "/pvt_results";
+
+    const response =
+        await fetch(
+            requestURL,
+            {
+                method: "POST",
+
+                headers: {
+                    "apikey":
+                        SUPABASE_KEY,
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Prefer":
+                        "return=minimal"
+                },
+
+                body:
+                    JSON.stringify(
+                        pvtData
+                    )
+            }
+        );
+
+
+    if (!response.ok) {
+
+        const errorText =
+            await response.text();
+
+        throw new Error(
+            `HTTP ${response.status}: ${errorText}`
+        );
+    }
+}
+
+async function finishTest() {
+
+    if (
+        phase === "finished" ||
+        phase === "saving"
+    ) {
+        return;
+    }
+
+
+    phase = "saving";
+
+    clearTimeout(
+        waitingTimer
+    );
+
+
+    stimulusVisible = false;
+
+
+    document
+        .getElementById("stimulus")
+        .style.display =
+        "none";
+
+
+    const validRTs =
+        results
+
+        .filter(
+            r =>
+                r.rt !== null &&
+                !r.falseStart
+        )
+
+        .map(
+            r => r.rt
+        );
+
+
+    const medianRT =
+        calculateMedian(
+            validRTs
+        );
+
+
+    const meanRT =
+        calculateMean(
+            validRTs
+        );
+
+
+    const sdRT =
+        calculateSD(
+            validRTs
+        );
+
+
+    const lapses =
+        results.filter(
+            r => r.lapse
+        ).length;
+
+
+    const falseStarts =
+        results.filter(
+            r => r.falseStart
+        ).length;
+
+
+    const isMobile =
+        /Android|iPhone|iPad|iPod|Mobile/i
+        .test(
+            navigator.userAgent
+        );
+
+
+    const pvtData = {
+
+        study_id:
+            studyID,
+
+        median_rt:
+            medianRT !== null
+            ? Math.round(medianRT)
+            : null,
+
+        mean_rt:
+            meanRT !== null
+            ? Math.round(meanRT)
+            : null,
+
+        rt_sd:
+            sdRT !== null
+            ? Math.round(sdRT)
+            : null,
+
+        lapses:
+            lapses,
+
+        false_starts:
+            falseStarts,
+
+        valid_responses:
+            validRTs.length,
+
+        trials:
+            results,
+
+        device_type:
+            isMobile
+            ? "mobile"
+            : "desktop"
+    };
+
+
+    document
+        .getElementById("container")
+        .innerHTML =
+    `
+        <h1>
+            Saving Results...
+        </h1>
+
+        <p>
+            Please wait.
+        </p>
+    `;
+
+
+    try {
+
+        await uploadPVTData(
+            pvtData
+        );
+
+        phase =
+            "finished";
+
+        showSuccessfulUpload();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+        showUploadError(
+            pvtData
+        );
+    }
+}
+
+function showSuccessfulUpload() {
+
+    document
+        .getElementById("container")
+        .innerHTML =
+    `
+        <h1>
+            Attention Task Completed
+        </h1>
+
+        <p>
+            Your results have been saved successfully.
+        </p>
+
+        <p>
+            Your Study ID is:
+        </p>
+
+        <h2>
+            ${studyID}
+        </h2>
+
+        <p>
+            Please use this ID in the questionnaire.
+        </p>
+
+        <button id="continueButton">
+            Copy ID & Continue
+        </button>
+
+        <p
+            id="copyStatus"
+            class="small"
+        ></p>
+    `;
+
+
+    document
+        .getElementById(
+            "continueButton"
+        )
+        .addEventListener(
+            "click",
+            continueToQuestionnaire
+        );
+}
+
+async function continueToQuestionnaire() {
+
+    const status =
+        document.getElementById(
+            "copyStatus"
+        );
+
+
+    try {
+
+        await navigator.clipboard
+            .writeText(
+                studyID
+            );
+
+
+        status.innerText =
+            "Study ID copied. Opening questionnaire...";
+
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    WJX_URL;
+
+            },
+            500
+        );
+
+    }
+
+    catch (error) {
+
+        status.innerHTML =
+            `
+            Automatic copying was blocked.<br>
+            Please copy this ID manually:
+            <b>${studyID}</b>
+            `;
+
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    WJX_URL;
+
+            },
+            3000
+        );
+    }
+}
+
+function showUploadError(pvtData) {
+
+    document
+        .getElementById("container")
+        .innerHTML =
+    `
+        <h1>
+            Connection Error
+        </h1>
+
+        <p>
+            Your attention-task results
+            could not be saved.
+        </p>
+
+        <p>
+            Please check your internet connection
+            and try again.
+        </p>
+
+        <button id="retryButton">
+            Retry Upload
+        </button>
+
+        <p
+            id="retryStatus"
+            class="small"
+        ></p>
+    `;
+
+
+    document
+        .getElementById(
+            "retryButton"
+        )
+        .addEventListener(
+            "click",
+            async function() {
+
+                const status =
+                    document.getElementById(
+                        "retryStatus"
+                    );
+
+
+                status.innerText =
+                    "Uploading...";
+
+
+                try {
+
+                    await uploadPVTData(
+                        pvtData
+                    );
+
+
+                    phase =
+                        "finished";
+
+
+                    showSuccessfulUpload();
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+
+                    status.innerText =
+                        "Upload failed. Please try again.";
+                }
+
+            }
+        );
+}
+/* ====================================
+   CSV EXPORT
+==================================== */
+
+
+
+</script>
+
+</body>
+
+</html>
