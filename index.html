@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
 <meta charset="UTF-8">
@@ -11,7 +11,7 @@
                maximum-scale=1.0,
                user-scalable=no">
 
-<title>2-Minute Attention Task</title>
+<title>2分钟注意力任务 | 2-Minute Attention Task</title>
 
 <style>
 
@@ -31,6 +31,8 @@ html, body {
 
 body {
     display: flex;
+    min-height: 100%;
+    height: auto;
 
     justify-content: center;
     align-items: center;
@@ -41,6 +43,7 @@ body {
 #container {
     width: 90%;
     max-width: 600px;
+    padding: 24px 0;
 }
 
 #stimulus {
@@ -69,6 +72,8 @@ button {
     font-size: 22px;
 
     min-height: 45px;
+    white-space: pre-line;
+    line-height: 1.5;
 }
 
 #countdown {
@@ -83,6 +88,77 @@ button {
     font-size: 14px;
 }
 
+.en {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.8em;
+    font-weight: normal;
+    line-height: 1.4;
+}
+
+#instructions p {
+    line-height: 1.5;
+    margin: 16px 0;
+}
+
+.next-step {
+    border: 2px solid #1d4ed8;
+    border-radius: 16px;
+    padding: 24px 18px;
+    background: #eff6ff;
+}
+
+.next-step h1 {
+    margin: 0 0 16px;
+    font-size: clamp(24px, 5vw, 32px);
+    color: #153b88;
+}
+
+.next-step p {
+    line-height: 1.5;
+}
+
+.next-step-note {
+    font-weight: bold;
+}
+
+#continueButton {
+    display: block;
+    width: 100%;
+    margin: 20px 0 12px;
+    padding: 20px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: #1d4ed8;
+    color: white;
+    font-size: clamp(19px, 4.5vw, 24px);
+    font-weight: bold;
+    line-height: 1.4;
+    box-shadow: 0 4px 0 #153b88;
+}
+
+#continueButton:hover {
+    background: #1e40af;
+}
+
+button:focus-visible {
+    outline: 3px solid #111827;
+    outline-offset: 4px;
+}
+
+.study-id-value {
+    display: block;
+    margin: 8px 0;
+    font-size: 26px;
+    letter-spacing: 2px;
+    user-select: text;
+}
+
+#copyStatus, #retryStatus {
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
 </style>
 </head>
 
@@ -91,7 +167,7 @@ button {
 
 <div id="container">
 
-<h1>Attention Task</h1>
+<h1>注意力任务<span class="en" lang="en">Attention Task</span></h1>
 
 <p id="studyID"></p>
 
@@ -99,34 +175,37 @@ button {
 <div id="instructions">
 
     <p>
-        This task measures your reaction speed and attention.
+        本任务用于测量反应速度和注意力，正式测试约2分钟。
+        <span class="en" lang="en">This task measures your reaction speed and attention. The test takes about 2 minutes.</span>
     </p>
 
     <p>
-        A red square will appear after a random waiting period.
+        随机等待一段时间后，屏幕上会出现红色方块。
+        <span class="en" lang="en">A red square will appear after a random waiting period.</span>
     </p>
 
     <p>
-        <b>Phone / tablet:</b>
-        tap anywhere on the screen as quickly as possible.
+        <b>手机／平板：</b>看到红色方块后，请尽快轻触屏幕任意位置。
+        <span class="en" lang="en"><b>Phone / tablet:</b> when the red square appears, tap anywhere on the screen as quickly as possible.</span>
     </p>
 
     <p>
-        <b>Computer:</b>
-        press the SPACE BAR or click anywhere on the screen.
+        <b>电脑：</b>看到红色方块后，请尽快按空格键或点击屏幕任意位置。
+        <span class="en" lang="en"><b>Computer:</b> when the red square appears, press the SPACE BAR or click anywhere on the screen as quickly as possible.</span>
     </p>
 
     <p>
-        Do not respond before the red square appears.
+        <b>红色方块出现前，请勿点击或按键。</b>
+        <span class="en" lang="en">Do not respond before the red square appears.</span>
     </p>
 
     <p>
-        You will first complete one practice example.
-        The practice response will not be recorded.
+        你将先完成一次练习，练习反应不会被记录。
+        <span class="en" lang="en">You will first complete one practice example. The practice response will not be recorded.</span>
     </p>
 
     <button id="demoButton">
-        Try Example
+        开始练习<span class="en" lang="en">Try Example</span>
     </button>
 
 </div>
@@ -185,7 +264,7 @@ const studyID =
 document
     .getElementById("studyID")
     .innerText =
-    "Study ID: " + studyID;
+    "研究编号 / Study ID: " + studyID;
 
 
 /* ====================================
@@ -270,7 +349,7 @@ function startDemo() {
     document
         .getElementById("message")
         .innerText =
-        "Wait for the red square...";
+        "请等待红色方块出现……\nWait for the red square...";
 
 
     phase =
@@ -349,7 +428,7 @@ function respondToDemo() {
         document
             .getElementById("message")
             .innerText =
-            "Too early. Wait for the red square.";
+            "点击过早，请等红色方块出现后再操作。\nToo early. Wait for the red square.";
 
 
         waitingTimer = setTimeout(
@@ -388,7 +467,7 @@ function respondToDemo() {
     document
         .getElementById("message")
         .innerText =
-        "Good. The real test will now begin.";
+        "练习完成，即将开始正式测试。\nPractice complete. The real test will now begin.";
 
 
     waitingTimer = setTimeout(
@@ -1173,11 +1252,12 @@ async function finishTest() {
         .innerHTML =
     `
         <h1>
-            Saving Results...
+            正在保存结果……<span class="en" lang="en">Saving Results...</span>
         </h1>
 
         <p>
-            Please wait.
+            请稍候，保存后还需继续填写问卷。
+            <span class="en" lang="en">Please wait. You will need to continue to the questionnaire after saving.</span>
         </p>
     `;
 
@@ -1213,34 +1293,39 @@ function showSuccessfulUpload() {
         .getElementById("container")
         .innerHTML =
     `
-        <h1>
-            Attention Task Completed
-        </h1>
+        <section class="next-step" aria-labelledby="nextStepHeading">
+            <h1 id="nextStepHeading">
+                还差一步：请完成问卷
+                <span class="en" lang="en">One more step: complete the questionnaire</span>
+            </h1>
 
-        <p>
-            Your results have been saved successfully.
-        </p>
+            <p>
+                注意力任务已完成，结果已保存。
+                <span class="en" lang="en">Attention task complete. Your results have been saved.</span>
+            </p>
 
-        <p>
-            Your Study ID is:
-        </p>
+            <p class="next-step-note">
+                请点击下方蓝色按钮继续，填写并提交问卷后才算完成。
+                <span class="en" lang="en">Click the blue button below to continue. Please fill in and submit the questionnaire to finish.</span>
+            </p>
 
-        <h2>
-            ${studyID}
-        </h2>
+            <button id="continueButton" type="button">
+                复制编号并继续填写问卷 →
+                <span class="en" lang="en">Copy ID & Continue to Questionnaire →</span>
+            </button>
 
-        <p>
-            Please use this ID in the questionnaire.
-        </p>
+            <p class="small">
+                点击后将复制研究编号并打开问卷，请将编号粘贴到问卷中。
+                <span class="en" lang="en">The button copies your Study ID and opens the questionnaire. Please paste the ID into the questionnaire.</span>
+            </p>
 
-        <button id="continueButton">
-            Copy ID & Continue
-        </button>
+            <p id="copyStatus" class="small" role="status" aria-live="polite"></p>
 
-        <p
-            id="copyStatus"
-            class="small"
-        ></p>
+            <p class="small">
+                你的研究编号 / <span lang="en">Your Study ID</span>
+                <strong class="study-id-value">${studyID}</strong>
+            </p>
+        </section>
     `;
 
 
@@ -1271,7 +1356,7 @@ async function continueToQuestionnaire() {
 
 
         status.innerText =
-            "Study ID copied. Opening questionnaire...";
+            "研究编号已复制，正在打开问卷……\nStudy ID copied. Opening questionnaire...";
 
 
         setTimeout(
@@ -1290,9 +1375,9 @@ async function continueToQuestionnaire() {
 
         status.innerHTML =
             `
-            Automatic copying was blocked.<br>
-            Please copy this ID manually:
-            <b>${studyID}</b>
+            自动复制受限，请手动复制下方研究编号：
+            <span class="en" lang="en">Automatic copying was blocked. Please copy this ID manually:</span>
+            <b class="study-id-value">${studyID}</b>
             `;
 
 
@@ -1315,26 +1400,27 @@ function showUploadError(pvtData) {
         .innerHTML =
     `
         <h1>
-            Connection Error
+            连接失败<span class="en" lang="en">Connection Error</span>
         </h1>
 
         <p>
-            Your attention-task results
-            could not be saved.
+            你的注意力任务结果暂未保存。
+            <span class="en" lang="en">Your attention-task results could not be saved.</span>
         </p>
 
         <p>
-            Please check your internet connection
-            and try again.
+            请检查网络连接，然后点击下方按钮重试。
+            <span class="en" lang="en">Please check your internet connection and try again.</span>
         </p>
 
         <button id="retryButton">
-            Retry Upload
+            重新上传<span class="en" lang="en">Retry Upload</span>
         </button>
 
         <p
             id="retryStatus"
             class="small"
+            role="status"
         ></p>
     `;
 
@@ -1354,7 +1440,7 @@ function showUploadError(pvtData) {
 
 
                 status.innerText =
-                    "Uploading...";
+                    "正在上传……\nUploading...";
 
 
                 try {
@@ -1380,7 +1466,7 @@ function showUploadError(pvtData) {
 
 
                     status.innerText =
-                        "Upload failed. Please try again.";
+                        "上传失败，请重试。\nUpload failed. Please try again.";
                 }
 
             }
