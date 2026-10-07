@@ -200,8 +200,11 @@ phases:
 instructions
 demo_waiting
 demo_stimulus
+demo_feedback
+demo_complete
 countdown
 formal
+saving
 finished
 */
 
@@ -218,6 +221,9 @@ let testStart =
 
 let waitingTimer =
     null;
+
+// Ignore responses while a formal trial is being replaced.
+let trialLocked = true;
 
 let trialNumber =
     0;
@@ -242,6 +248,12 @@ document
 
 
 function startDemo() {
+
+    if (phase !== "instructions" && phase !== "demo_feedback") {
+        return;
+    }
+
+    clearTimeout(waitingTimer);
 
     document
         .getElementById("instructions")
@@ -285,6 +297,10 @@ function startDemo() {
 
 function showDemoStimulus() {
 
+    if (phase !== "demo_waiting") {
+        return;
+    }
+
     phase =
         "demo_stimulus";
 
@@ -322,6 +338,9 @@ function respondToDemo() {
         "demo_waiting"
     ) {
 
+        // Lock feedback immediately so repeated taps cannot queue restarts.
+        phase = "demo_feedback";
+
         clearTimeout(
             waitingTimer
         );
@@ -333,7 +352,7 @@ function respondToDemo() {
             "Too early. Wait for the red square.";
 
 
-        setTimeout(
+        waitingTimer = setTimeout(
             startDemo,
             1000
         );
@@ -352,6 +371,9 @@ function respondToDemo() {
 
     }
 
+    // Only one response may advance the demo to the countdown.
+    phase = "demo_complete";
+
 
     stimulusVisible =
         false;
@@ -369,7 +391,7 @@ function respondToDemo() {
         "Good. The real test will now begin.";
 
 
-    setTimeout(
+    waitingTimer = setTimeout(
         startCountdown,
         1200
     );
@@ -382,6 +404,10 @@ function respondToDemo() {
 ==================================== */
 
 function startCountdown() {
+
+    if (phase !== "demo_complete") {
+        return;
+    }
 
     phase =
         "countdown";
@@ -451,6 +477,10 @@ function startCountdown() {
 
 function startFormalTest() {
 
+    if (phase !== "countdown") {
+        return;
+    }
+
     phase =
         "formal";
 
@@ -486,6 +516,9 @@ function nextTrial() {
 
     }
 
+    // Keep just one timer for the current wait or inter-trial pause.
+    clearTimeout(waitingTimer);
+
 
     const elapsed =
         performance.now()
@@ -503,6 +536,8 @@ function nextTrial() {
 
     }
 
+
+    trialLocked = false;
 
     stimulusVisible =
         false;
@@ -540,7 +575,7 @@ function showFormalStimulus() {
 
     if (
         phase !==
-        "formal"
+        "formal" || trialLocked || stimulusVisible
     ) {
 
         return;
@@ -591,12 +626,15 @@ function respondFormal(
 
     if (
         phase !==
-        "formal"
+        "formal" || trialLocked
     ) {
 
         return;
 
     }
+
+    // The first response owns this trial, including the 300 ms pause.
+    trialLocked = true;
 
 
     /*
@@ -646,7 +684,7 @@ function respondFormal(
         */
 
 
-        setTimeout(
+        waitingTimer = setTimeout(
             nextTrial,
             300
         );
@@ -715,7 +753,7 @@ function respondFormal(
        No RT feedback.
     */
 
-    setTimeout(
+    waitingTimer = setTimeout(
         nextTrial,
         300
     );
